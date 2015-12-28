@@ -27,15 +27,15 @@
     <version>5.4.4</version>
   </parent>
   <groupId>org.xwiki.contrib</groupId>
-  <artifactId>application-auto-reload-extension</artifactId>
-  <version>1.0</version>
+  <artifactId>extension-autoreload</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <packaging>xar</packaging>
-  <name>XWiki Application - Auto-Reload Extension</name>
+  <name>XWiki Extension - Auto-Reload</name>
   <description>This extension allows to check for new versions to a page and reload it when it has changed</description>
   <developers>
     <developer>
       <id>ldubost</id>
-      <name>ldubost</name>
+      <name>Ludovic Dubost (XWiki SAS)</name>
     </developer>
   </developers>
  <build>
