@@ -23,5 +23,31 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>autoreload.start=Rechargement automatique
-autoreload.stop=Stopper le rechargement auto</content>
+autoreload.stop=Stopper le rechargement auto
+autoreload.confirmmerge=Le contenu a été modifié sur le serveur. Voulez-vous fusionner les changements et sauver le document ?
+autoreload.conflicts=La fusion a généré des conflits. Voulez-vous sauver le document avec vos changements en remplacement des conflits ?
+autoreload.savecomplete=Sauvegarde terminée. Voulez-vous recharger l'éditeur ?
+autoreload.savefailed=Echec de la sauvegarde
+autoreload.mergefailed=Echec de la fusion
+autoreload.wikiconversionfailed=Echec de la conversion en syntaxe Wiki
+autoreload.exception=Une exception a eu lieu lors de la fusion
+autoreload.reload=Le contenu a été modifié sur le serveur, mais pas localement. Voulez-vous recharger l'éditeur ?
+autoreload.yes=Oui
+autoreload.no=Non
+autoreload.reloadpage=Rechargement de la page...
+autoreload.config.title=Rechargement automatique
+autoreload.config.description=Le rechargement automatique permet de vérifier si le document à changé depuis le dernier chargement aussi bien en mode visualisation qu'en mode édition. En mode édition, si le document à changé à la fois sur le serveur et localement, une fusion des changements sera tentée. Pour activer cette fonctionnalité, utilisez soit la configuration "Toujours activé" ci-dessous ou utilisé l'action ajoutée au menu "Plus d'actions". 
+admin.autoreload=Rechargement automatique
+XWiki.AutoReloadConfigClass_viewmode=Configuration pour la lecture
+XWiki.AutoReloadConfigClass_editwikimode=Configuration pour l'édition Wiki
+XWiki.AutoReloadConfigClass_editwysiwygmode=Configuration pour l'édition Wysiwyg
+XWiki.AutoReloadConfigClass_viewmode_ondemand=A la demande
+XWiki.AutoReloadConfigClass_viewmode_always=Toujours activé
+XWiki.AutoReloadConfigClass_viewmode_off=Désactivé
+XWiki.AutoReloadConfigClass_editwikimode_ondemand=A la demande
+XWiki.AutoReloadConfigClass_editwikimode_always=Toujours activé
+XWiki.AutoReloadConfigClass_editwikimode_off=Désactivé
+XWiki.AutoReloadConfigClass_editwysiwygmode_ondemand=A la demande
+XWiki.AutoReloadConfigClass_editwysiwygmode_always=Toujours activé
+XWiki.AutoReloadConfigClass_editwysiwygmode_off=Désactivé</content>
 </xwikidoc>

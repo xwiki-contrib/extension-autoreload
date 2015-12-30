@@ -104,8 +104,11 @@
     <property>
       <code>version = "";
 autoreloadstatus = false;
+originalContent = "";
+config = { "viewmode" : "ondemand", "editwikimode" : "off", "editwysiwygmode" : "ondemand" };
+mode = "";
 
-require(['jquery', 'xwiki-events-bridge'], function($) {
+require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
   function createCookie(name, value, path, days) {
     var expires;
 
@@ -117,7 +120,7 @@ require(['jquery', 'xwiki-events-bridge'], function($) {
         expires = "";
     }
     document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=" + path;
-}
+  }  
 
   function readCookie(name) {
     var nameEQ = encodeURIComponent(name) + "=";
@@ -128,31 +131,229 @@ require(['jquery', 'xwiki-events-bridge'], function($) {
         if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
     }
     return null;
-}
+  }
 
-function eraseCookie(name, path) {
+  function eraseCookie(name, path) {
     createCookie(name, "", path, -1);
-}
+  }
 
+  function startAutoReload() {
+    console.log("Starting auto-reload");
+    autoreloadstatus = true;
+    $("#autoreload-startlink").text("${services.localization.render("autoreload.stop")}");
+  }
+
+  function stopAutoReload() {
+    console.log("Stopping auto-reload");
+    autoreloadstatus = false;
+    $("#autoreload-startlink").text("${services.localization.render("autoreload.start")}");
+  }
+
+  function isRtWikiOn() {
+    var rtWikiCheckbox = jQuery(".rtwiki-allow");
+    if (rtWikiCheckbox!=null &amp;&amp; rtWikiCheckbox.length&gt;0 &amp;&amp; rtWikiCheckbox[0].checked) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function storeOriginalContent() {
+    originalContent = document.forms["edit"].content.value;
+  }
+
+  function hasContentChanged() {
+    console.log("Verifying content change");
+    var newContent = document.forms["edit"].content.value;
+    console.log(originalContent);
+    console.log(newContent);
+    console.log(newContent);
+    var result = (originalContent!=newContent);
+    console.log(result);
+    return result;
+  }
+
+  function doAutoReloadPage() {
+     console.log("Showing reload confirmation box");
+     // since the content did not change.. We only need to reload..  
+     new XWiki.widgets.ConfirmationBox({ onYes: function() {
+          console.log("Reloading");
+          new XWiki.widgets.Notification("${services.localization.render('autoreload.reloadingpage')}", "info");
+          history.go(0);
+        }, onNo : function() {
+          console.log("Reloading denied");
+        }}, { 
+        confirmationText: "${services.localization.render('autoreload.reload')}",
+        yesButtonText: "${services.localization.render('autoreload.yes')}",
+        noButtonText: "${services.localization.render('autoreload.no')}"
+     });
+  }
+
+  function doAutoReloadWiki() {
+     if (hasContentChanged()) {
+      // we read the content value from the form;
+      console.log("Showing merge confirmation box");
+      new XWiki.widgets.ConfirmationBox({ onYes: function() {
+          console.log("Auto-reload confirmed");
+          doAutoReloadMerge(document.forms["edit"].content.value);
+        }, onNo : function() {
+          console.log("Auto-reload not confirmed");
+        }}, { 
+        confirmationText: "${services.localization.render('autoreload.confirmmerge')}",
+        yesButtonText: "${services.localization.render('autoreload.yes')}",
+        noButtonText: "${services.localization.render('autoreload.no')}"
+      });
+     } else {
+       doAutoReloadPage();
+     }
+  }
+
+  function doAutoReloadWysiwyg() {
+    if (hasContentChanged()) {
+      console.log("Showing merge confirmation box");
+      new XWiki.widgets.ConfirmationBox({ onYes: function() {
+          console.log("Auto-reload confirmed");
+          // we first need to get the converted content...
+          Wysiwyg.getInstance("content").getSourceText(doAutoReloadMerge, 
+           function() {  
+          new XWiki.widgets.Notification("${services.localization.render('autoreload.wikiconversionfailed')}", "error");
+           }); // end getSourceText
+         }, onNo : function() {
+          console.log("Auto-reload not confirmed");
+         }}, { 
+          confirmationText: "${services.localization.render('autoreload.confirmmerge')}",
+          yesButtonText: "${services.localization.render('autoreload.yes')}",
+          noButtonText: "${services.localization.render('autoreload.no')}"
+         });
+    } else {
+      doAutoReloadPage();
+    }
+  } 
+
+  function doAutoReloadSave(resultObj) {
+     var form_token = xm ? xm.form_token : $('meta[name="form_token"]').attr('content');
+     console.log("Saving to: " + window.docsaveurl);
+     $.post(window.docsaveurl, { content : resultObj.content, ajax : "1",
+                                 form_token : form_token }, 
+       function(result) {
+          // save successful let's reload
+          console.log("Save successful");
+          new XWiki.widgets.ConfirmationBox({ onYes: function() {
+            console.log("Reloading");
+            history.go(0);
+          }, onNo : function() {
+            console.log("Reloading denied");
+          }}, { 
+            confirmationText: "${services.localization.render('autoreload.savecomplete')}",
+            yesButtonText: "${services.localization.render('autoreload.yes')}",
+            noButtonText: "${services.localization.render('autoreload.no')}"
+          });
+       }, 
+       function(result) {
+          console.log("Saving has failed");
+          console.log(result);
+          new XWiki.widgets.Notification("${services.localization.render('autoreload.savefailed')}", "error");
+       }
+      );
+  }
+  function doAutoReloadMerge(content) {
+        // Merging code
+        console.log("Your source code: " + content);
+
+        var url = "${xwiki.getURL("XWiki.AutoReloadMerge")}"
+        var params = { xpage : "plain", outputSyntax : "plain", 
+                       document : XWiki.currentSpace + "." + XWiki.currentPage, 
+                       version: version, content: content };
+
+        $.post(url, params, function(result) {
+            try {
+                var resultObj = $.parseJSON(result);
+                console.log("Merge conflicts: " + resultObj.conflicts);
+                console.log("Merged source code: " + resultObj.content);
+
+                if (resultObj.content) {
+                   if (resultObj.conflicts==0) {
+                      doAutoReloadSave(resultObj);
+                    } else {
+                     new XWiki.widgets.ConfirmationBox({ onYes: function() {
+                      doAutoReloadSave(resultObj);
+                     }, onNo : function() {
+                      console.log("No merging because of conflicts");
+                    }}, { 
+                      confirmationText: "${services.localization.render('autoreload.conflicts')}",
+                      yesButtonText: "${services.localization.render('autoreload.yes')}",
+                      noButtonText: "${services.localization.render('autoreload.no')}"
+                    });
+                   }
+                 } else {
+                  new XWiki.widgets.Notification("${services.localization.render('autoreload.mergefailed')}", "error");
+                 } // end if content
+             } catch(e) {
+                console.log(e);
+                new XWiki.widgets.Notification("${services.localization.render('autoreload.exception')}", "error");
+             } // end try
+          }); // end post
+  }
   
-  function testCurrentPageVersion() {
-      setTimeout(function() {
-        $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
+  function doAutoReload() {
+      if (isRtWikiOn()) {
+        console.log("Not running autoreload because realtime is on");
+        stopAutoReload();
+      } else {
+       setTimeout(function() {
+
+        if (isRtWikiOn()) {
+         console.log("Not running autoreload because realtime is on");
+         stopAutoReload();
+        } else {
+         $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
            if (data.version &amp;&amp; data.version!=version) {
               // page has been updated
               console.log("Version differs.. Auto-reloading");
-              history.go(0);
+              stopAutoReload();
+              if (XWiki.contextaction=="edit") {
+                  if (XWiki.editor=="wysiwyg")
+                   doAutoReloadWysiwyg();
+                  else if (XWiki.editor=="wiki")
+                   doAutoReloadWiki();
+              } else {
+                 // if detected in view mode then we just reload
+                 history.go(0);
+              } // end if contextaction edit
            } else {
-              if (autoreloadstatus==true)
-                testCurrentPageVersion();
-           }
-        });    
-      }, 10000);
-  }
-  
-  $(document).ready(function(event, data) {
-   if (XWiki.contextaction=="view") {
+              if (autoreloadstatus==true) {
+                doAutoReload();
+              } else {
+                stopAutoReload();
+              }
+           } // end if data.version
+        }); // end getJSON   
+       } // end if rtWiki
+      }, 10000); // end setTimetout
+    } // end if rtWiki
+  } // end doAutoReload
+
+  function resetAutoReload() {
+   storeOriginalContent();
    $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
+      version = data.version;
+      console.log("New Initial version " + data.version);
+   });
+  }
+
+  function initAutoReload() {
+   if (XWiki.contextaction=="view") {
+     mode = "viewmode";
+   } else if (XWiki.contextaction=="edit") {
+     if (XWiki.editor=="wysiwyg") {
+      mode = "editwysiwygmode";
+     } else if (XWiki.editor=="wiki") {
+      mode = "editwikimode";
+     }
+   }
+
+   if (mode!="" &amp;&amp; config[mode]!="off") {
+    $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
       version = data.version;
       console.log("Initial version " + data.version);
      
@@ -160,38 +361,64 @@ function eraseCookie(name, path) {
       if (dividerLIList!=null &amp;&amp; dividerLIList.length&gt;0) {
         var dividerLI = dividerLIList.last();       
         var autoStartCookieValue = readCookie("autoreload-" + XWiki.currentSpace + "." + XWiki.currentPage);
-        if (autoStartCookieValue==1) {
+        if (autoStartCookieValue==1 || config[mode]=="always") {
          console.log("Starting auto-reload from cookie");
-         dividerLI.before("&lt;li&gt;&lt;a href='javascript:void(0)' id='autoreload-startlink'&gt;" + "${services.localization.render('autoreload.stop')}" + "&lt;/a&gt;&lt;/li&gt;");
-         autoreloadstatus = true;
-         testCurrentPageVersion();
+         dividerLI.before("&lt;li&gt;&lt;a href='javascript:void(0)' id='autoreload-startlink'&gt;" 
+                         + "${services.localization.render("autoreload.stop")}" + "&lt;/a&gt;&lt;/li&gt;");
+         startAutoReload();
+         doAutoReload();
         } else {
-         dividerLI.before("&lt;li&gt;&lt;a href='javascript:void(0)' id='autoreload-startlink'&gt;" + "${services.localization.render('autoreload.start')}" + "&lt;/a&gt;&lt;/li&gt;");
-        }
+         dividerLI.before("&lt;li&gt;&lt;a href='javascript:void(0)' id='autoreload-startlink'&gt;" 
+                         + "${services.localization.render("autoreload.start")}" + "&lt;/a&gt;&lt;/li&gt;");
+        } // end if autoStartCookieValue
           
         $("#autoreload-startlink").click(function(event) {
            if (autoreloadstatus==false) {
-            autoreloadstatus = true;
-            console.log("Starting auto-reload");
-            $("#autoreload-startlink").text("${services.localization.render('autoreload.stop')}");
+            startAutoReload();
             createCookie("autoreload-" + XWiki.currentSpace + "." + XWiki.currentPage, "1", location.path, 1);
-            testCurrentPageVersion();
+            doAutoReload();
            } else {
-            autoreloadstatus = false;
-            console.log("Stopping auto-reload");
-            $("#autoreload-startlink").text("${services.localization.render('autoreload.start')}");
+            stopAutoReload();
             eraseCookie("autoreload-" + XWiki.currentSpace + "." + XWiki.currentPage, location.path);
            }
            return false;
-        })
+        }); // end click
+      } // end if dividerLIList
+    }); // end getJSON
+   } // end if contextaction
+  } // end initAutoReload
+  
+ function readAutoReloadConfig() {
+   var configDoc = new XWiki.Document("AutoReloadConfig", "XWiki");
+   var restURL = configDoc.getRestURL() + "/objects/XWiki.AutoReloadConfigClass/0?media=json";
+   $.getJSON(restURL, function(configjson) {
+    try {
+      var props = configjson.properties;
+      for (i= 0;i&lt;props.length;i++) {
+        config[props[i].name] = props[i].value;
       }
-     
-    });
-   }
-  });
-});
+      console.log("New config: " + config);
+    } catch (e) {
+      console.log("Exception while reading configuration. Using default configuration");
+    } // end try
+    initAutoReload(false);
+   }, function(data) {
+    console.log("Failed to read configuration. Using default configuration");
+    initAutoReload(false);
+  }); // end getJSON
+ }
 
-</code>
+ $(document).ready(function(event, data) {
+   $(document).on("xwiki:document:saved", function(event) {
+     console.log("Received a save event.. We need to reset");
+     resetAutoReload();
+   });
+
+   storeOriginalContent();
+   readAutoReloadConfig();
+ }); // end document ready
+
+}); // end requirejs</code>
     </property>
     <property>
       <name>Auto Reload Extension</name>
