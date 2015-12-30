@@ -141,12 +141,14 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
     console.log("Starting auto-reload");
     autoreloadstatus = true;
     $("#autoreload-startlink").text("${services.localization.render("autoreload.stop")}");
+    new XWiki.widgets.Notification("${services.localization.render('autoreload.started')}", "info");
   }
 
   function stopAutoReload() {
     console.log("Stopping auto-reload");
     autoreloadstatus = false;
     $("#autoreload-startlink").text("${services.localization.render("autoreload.start")}");
+    new XWiki.widgets.Notification("${services.localization.render('autoreload.stopped')}", "info");
   }
 
   function isRtWikiOn() {
@@ -203,6 +205,8 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
         yesButtonText: "${services.localization.render('autoreload.yes')}",
         noButtonText: "${services.localization.render('autoreload.no')}"
       });
+      // Force focus on window (this does not always work)
+      window.focus();
      } else {
        doAutoReloadPage();
      }
@@ -224,7 +228,9 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
           confirmationText: "${services.localization.render('autoreload.confirmmerge')}",
           yesButtonText: "${services.localization.render('autoreload.yes')}",
           noButtonText: "${services.localization.render('autoreload.no')}"
-         });
+       });
+       // Force focus on window (this does not always work)
+       window.focus();
     } else {
       doAutoReloadPage();
     }
@@ -279,11 +285,13 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
                       doAutoReloadSave(resultObj);
                      }, onNo : function() {
                       console.log("No merging because of conflicts");
-                    }}, { 
+                     }}, { 
                       confirmationText: "${services.localization.render('autoreload.conflicts')}",
                       yesButtonText: "${services.localization.render('autoreload.yes')}",
                       noButtonText: "${services.localization.render('autoreload.no')}"
-                    });
+                     });
+                     // Force focus on window
+                     window.focus();
                    }
                  } else {
                   new XWiki.widgets.Notification("${services.localization.render('autoreload.mergefailed')}", "error");
@@ -298,6 +306,7 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
   function doAutoReload() {
       if (isRtWikiOn()) {
         console.log("Not running autoreload because realtime is on");
+        new XWiki.widgets.Notification("${services.localization.render('autoreload.realtimeon')}", "error");
         stopAutoReload();
       } else {
        setTimeout(function() {

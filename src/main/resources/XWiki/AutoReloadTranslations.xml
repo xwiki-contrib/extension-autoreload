@@ -59,16 +59,19 @@
   </object>
   <content>autoreload.start=Start Auto-Reload
 autoreload.stop=Stop Auto-Reload
-autoreload.confirmmerge=The content has been changed on the server. Would you like to merge your changes and save the document ?
-autoreload.conflicts=The Merge has resulted in conflicts. Would you like to save the version with your changes overriding conflicts ?
-autoreload.savecomplete=Saving is complete. Would you like to reload the editor ?
+autoreload.confirmmerge=Content has changed on the server. Would you like to merge your changes and save the document?
+autoreload.conflicts=The Merge has resulted in conflicts. Would you like to save the version with your changes overriding conflicts?
+autoreload.savecomplete=Saving is complete. Would you like to reload the editor?
 autoreload.savefailed=Saving failed
 autoreload.mergefailed=Merge failed
 autoreload.wikiconversionfailed=Wiki conversion failed
 autoreload.exception=An exception occurred while performing the merge
-autoreload.reload=Content has changed on the server and you have not made any changes locally. Would you like to reload the editor ?
+autoreload.reload=Content has changed on the server with no local changes. Would you like to reload the editor?
 autoreload.yes=Yes
 autoreload.no=No
+autoreload.realtimeon=Auto-reload cannot be started because realtime is activated
+autoreload.started=Auto-reload has been activated
+autoreload.stopped=Auto-reload has been stopped
 autoreload.reloadpage=Reloading page...
 autoreload.config.title=Auto-Reload
 admin.autoreload=Auto-Reload
