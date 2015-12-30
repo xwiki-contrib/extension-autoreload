@@ -302,6 +302,11 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
              } // end try
           }); // end post
   }
+
+  function getRestURL() {
+    var r = Math.floor(Math.random()*1000000000)
+    return XWiki.currentDocument.getRestURL() + "?media=json&amp;r=" + r;
+  }
   
   function doAutoReload() {
       if (isRtWikiOn()) {
@@ -315,7 +320,7 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
          console.log("Not running autoreload because realtime is on");
          stopAutoReload();
         } else {
-         $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
+         $.getJSON(getRestURL(), function( data ) {
            if (data.version &amp;&amp; data.version!=version) {
               // page has been updated
               console.log("Version differs.. Auto-reloading");
@@ -344,7 +349,7 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
 
   function resetAutoReload() {
    storeOriginalContent();
-   $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
+   $.getJSON(getRestURL(), function( data ) {
       version = data.version;
       console.log("New Initial version " + data.version);
    });
@@ -362,7 +367,7 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
    }
 
    if (mode!="" &amp;&amp; config[mode]!="off") {
-    $.getJSON(XWiki.currentDocument.getRestURL(), function( data ) {
+    $.getJSON(getRestURL(), function( data ) {
       version = data.version;
       console.log("Initial version " + data.version);
      
