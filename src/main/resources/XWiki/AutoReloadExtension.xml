@@ -161,7 +161,8 @@ require(['jquery', 'xwiki-events-bridge', 'xwiki-meta'], function($, xm) {
   }
 
   function storeOriginalContent() {
-    originalContent = document.forms["edit"].content.value;
+    if (document.forms["edit"]) 
+      originalContent = document.forms["edit"].content.value;
   }
 
   function hasContentChanged() {
