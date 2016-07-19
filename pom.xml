@@ -35,7 +35,8 @@
   <developers>
     <developer>
       <id>ludovic</id>
-      <name>Ludovic Dubost (XWiki SAS)</name>
+      <name>Ludovic Dubost</name>
+      <organization>XWiki SAS</organization>
     </developer>
   </developers>
  <build>
